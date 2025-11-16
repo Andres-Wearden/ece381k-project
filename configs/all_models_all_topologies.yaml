@@ -1,0 +1,545 @@
+# Comprehensive Comparison: All Models × All Topologies
+# This configuration runs 4 models (logistic, neural, gat, rf)
+# across all 9 topologies (star, cascade, feedback_rewired, ring, mesh, small_world, scale_free, tree, grid)
+# Total: 36 experiments
+
+experiments:
+  # ========== LOGISTIC REGRESSION ==========
+  - name: star_logistic
+    dataset: cora
+    topology: star
+    n_agents: 10
+    agent_type: logistic
+    agent_params:
+      C: 1.0
+      max_iter: 2000
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+
+  - name: cascade_logistic
+    dataset: cora
+    topology: cascade
+    n_agents: 10
+    agent_type: logistic
+    agent_params:
+      C: 1.0
+      max_iter: 2000
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+
+  - name: feedback_rewired_logistic
+    dataset: cora
+    topology: feedback_rewired
+    n_agents: 10
+    agent_type: logistic
+    agent_params:
+      C: 1.0
+      max_iter: 2000
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+
+  - name: ring_logistic
+    dataset: cora
+    topology: ring
+    n_agents: 10
+    agent_type: logistic
+    agent_params:
+      C: 1.0
+      max_iter: 2000
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+
+  - name: mesh_logistic
+    dataset: cora
+    topology: mesh
+    n_agents: 10
+    agent_type: logistic
+    agent_params:
+      C: 1.0
+      max_iter: 2000
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+
+  - name: small_world_logistic
+    dataset: cora
+    topology: small_world
+    n_agents: 10
+    topology_params:
+      k: 4
+      p: 0.3
+    agent_type: logistic
+    agent_params:
+      C: 1.0
+      max_iter: 2000
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+
+  - name: scale_free_logistic
+    dataset: cora
+    topology: scale_free
+    n_agents: 10
+    topology_params:
+      m: 3
+    agent_type: logistic
+    agent_params:
+      C: 1.0
+      max_iter: 2000
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+
+  - name: tree_logistic
+    dataset: cora
+    topology: tree
+    n_agents: 10
+    topology_params:
+      branching_factor: 3
+    agent_type: logistic
+    agent_params:
+      C: 1.0
+      max_iter: 2000
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+
+  - name: grid_logistic
+    dataset: cora
+    topology: grid
+    n_agents: 10
+    topology_params:
+      rows: 2
+      cols: 5
+    agent_type: logistic
+    agent_params:
+      C: 1.0
+      max_iter: 2000
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+
+  # ========== NEURAL NETWORK ==========
+  - name: star_neural
+    dataset: cora
+    topology: star
+    n_agents: 10
+    agent_type: neural
+    agent_params:
+      hidden_dim: 128
+      n_layers: 10
+      lr: 0.001
+      epochs: 100
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+
+  - name: cascade_neural
+    dataset: cora
+    topology: cascade
+    n_agents: 10
+    agent_type: neural
+    agent_params:
+      hidden_dim: 128
+      n_layers: 10
+      lr: 0.001
+      epochs: 100
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+
+  - name: feedback_rewired_neural
+    dataset: cora
+    topology: feedback_rewired
+    n_agents: 10
+    agent_type: neural
+    agent_params:
+      hidden_dim: 128
+      n_layers: 10
+      lr: 0.001
+      epochs: 100
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+
+  - name: ring_neural
+    dataset: cora
+    topology: ring
+    n_agents: 10
+    agent_type: neural
+    agent_params:
+      hidden_dim: 128
+      n_layers: 10
+      lr: 0.001
+      epochs: 100
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+
+  - name: mesh_neural
+    dataset: cora
+    topology: mesh
+    n_agents: 10
+    agent_type: neural
+    agent_params:
+      hidden_dim: 128
+      n_layers: 10
+      lr: 0.001
+      epochs: 100
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+
+  - name: small_world_neural
+    dataset: cora
+    topology: small_world
+    n_agents: 10
+    topology_params:
+      k: 4
+      p: 0.3
+    agent_type: neural
+    agent_params:
+      hidden_dim: 128
+      n_layers: 10
+      lr: 0.001
+      epochs: 100
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+
+  - name: scale_free_neural
+    dataset: cora
+    topology: scale_free
+    n_agents: 10
+    topology_params:
+      m: 3
+    agent_type: neural
+    agent_params:
+      hidden_dim: 128
+      n_layers: 10
+      lr: 0.001
+      epochs: 100
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+
+  - name: tree_neural
+    dataset: cora
+    topology: tree
+    n_agents: 10
+    topology_params:
+      branching_factor: 3
+    agent_type: neural
+    agent_params:
+      hidden_dim: 128
+      n_layers: 10
+      lr: 0.001
+      epochs: 100
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+
+  - name: grid_neural
+    dataset: cora
+    topology: grid
+    n_agents: 10
+    topology_params:
+      rows: 2
+      cols: 5
+    agent_type: neural
+    agent_params:
+      hidden_dim: 128
+      n_layers: 10
+      lr: 0.001
+      epochs: 100
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+
+  # ========== GAT ==========
+  - name: star_gat
+    dataset: cora
+    topology: star
+    n_agents: 10
+    agent_type: gat
+    agent_params:
+      hidden_dim: 64
+      num_heads: 2
+      num_layers: 2
+      lr: 0.01
+      epochs: 50
+      dropout: 0.0
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+
+  - name: cascade_gat
+    dataset: cora
+    topology: cascade
+    n_agents: 10
+    agent_type: gat
+    agent_params:
+      hidden_dim: 64
+      num_heads: 2
+      num_layers: 2
+      lr: 0.01
+      epochs: 50
+      dropout: 0.0
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+
+  - name: feedback_rewired_gat
+    dataset: cora
+    topology: feedback_rewired
+    n_agents: 10
+    agent_type: gat
+    agent_params:
+      hidden_dim: 64
+      num_heads: 2
+      num_layers: 2
+      lr: 0.01
+      epochs: 50
+      dropout: 0.0
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+
+  - name: ring_gat
+    dataset: cora
+    topology: ring
+    n_agents: 10
+    agent_type: gat
+    agent_params:
+      hidden_dim: 64
+      num_heads: 2
+      num_layers: 2
+      lr: 0.01
+      epochs: 50
+      dropout: 0.0
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+
+  - name: mesh_gat
+    dataset: cora
+    topology: mesh
+    n_agents: 10
+    agent_type: gat
+    agent_params:
+      hidden_dim: 64
+      num_heads: 2
+      num_layers: 2
+      lr: 0.01
+      epochs: 50
+      dropout: 0.0
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+
+  - name: small_world_gat
+    dataset: cora
+    topology: small_world
+    n_agents: 10
+    topology_params:
+      k: 4
+      p: 0.3
+    agent_type: gat
+    agent_params:
+      hidden_dim: 64
+      num_heads: 2
+      num_layers: 2
+      lr: 0.01
+      epochs: 50
+      dropout: 0.0
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+
+  - name: scale_free_gat
+    dataset: cora
+    topology: scale_free
+    n_agents: 10
+    topology_params:
+      m: 3
+    agent_type: gat
+    agent_params:
+      hidden_dim: 64
+      num_heads: 2
+      num_layers: 2
+      lr: 0.01
+      epochs: 50
+      dropout: 0.0
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+
+  - name: tree_gat
+    dataset: cora
+    topology: tree
+    n_agents: 10
+    topology_params:
+      branching_factor: 3
+    agent_type: gat
+    agent_params:
+      hidden_dim: 64
+      num_heads: 2
+      num_layers: 2
+      lr: 0.01
+      epochs: 50
+      dropout: 0.0
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+
+  - name: grid_gat
+    dataset: cora
+    topology: grid
+    n_agents: 10
+    topology_params:
+      rows: 2
+      cols: 5
+    agent_type: gat
+    agent_params:
+      hidden_dim: 64
+      num_heads: 2
+      num_layers: 2
+      lr: 0.01
+      epochs: 50
+      dropout: 0.0
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+
+  # ========== RANDOM FOREST ==========
+  - name: star_rf
+    dataset: cora
+    topology: star
+    n_agents: 10
+    agent_type: rf
+    agent_params:
+      n_estimators: 100
+      max_depth: 20
+      min_samples_split: 5
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+
+  - name: cascade_rf
+    dataset: cora
+    topology: cascade
+    n_agents: 10
+    agent_type: rf
+    agent_params:
+      n_estimators: 100
+      max_depth: 20
+      min_samples_split: 5
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+
+  - name: feedback_rewired_rf
+    dataset: cora
+    topology: feedback_rewired
+    n_agents: 10
+    agent_type: rf
+    agent_params:
+      n_estimators: 100
+      max_depth: 20
+      min_samples_split: 5
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+
+  - name: ring_rf
+    dataset: cora
+    topology: ring
+    n_agents: 10
+    agent_type: rf
+    agent_params:
+      n_estimators: 100
+      max_depth: 20
+      min_samples_split: 5
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+
+  - name: mesh_rf
+    dataset: cora
+    topology: mesh
+    n_agents: 10
+    agent_type: rf
+    agent_params:
+      n_estimators: 100
+      max_depth: 20
+      min_samples_split: 5
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+
+  - name: small_world_rf
+    dataset: cora
+    topology: small_world
+    n_agents: 10
+    topology_params:
+      k: 4
+      p: 0.3
+    agent_type: rf
+    agent_params:
+      n_estimators: 100
+      max_depth: 20
+      min_samples_split: 5
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+
+  - name: scale_free_rf
+    dataset: cora
+    topology: scale_free
+    n_agents: 10
+    topology_params:
+      m: 3
+    agent_type: rf
+    agent_params:
+      n_estimators: 100
+      max_depth: 20
+      min_samples_split: 5
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+
+  - name: tree_rf
+    dataset: cora
+    topology: tree
+    n_agents: 10
+    topology_params:
+      branching_factor: 3
+    agent_type: rf
+    agent_params:
+      n_estimators: 100
+      max_depth: 20
+      min_samples_split: 5
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+
+  - name: grid_rf
+    dataset: cora
+    topology: grid
+    n_agents: 10
+    topology_params:
+      rows: 2
+      cols: 5
+    agent_type: rf
+    agent_params:
+      n_estimators: 100
+      max_depth: 20
+      min_samples_split: 5
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+

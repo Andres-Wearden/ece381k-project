@@ -1,0 +1,107 @@
+# Compare Selected Topologies - Using Full Cora Dataset with Logistic Regression Agents
+experiments:
+  - name: star_topology_logistic
+    dataset: cora
+    topology: star
+    n_agents: 10
+    topology_params:
+      hub_id: 0
+      bidirectional: true
+    agent_type: logistic
+    agent_params:
+      C: 1.0
+      max_iter: 1000
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1
+          failure_duration: 5
+          start_time: 10
+
+  - name: cascade_topology_logistic
+    dataset: cora
+    topology: cascade
+    n_agents: 10
+    topology_params:
+      skip_connections: true
+      bidirectional: true
+    agent_type: logistic
+    agent_params:
+      C: 1.0
+      max_iter: 1000
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1
+          failure_duration: 5
+          start_time: 10
+
+  - name: feedback_rewired_topology_logistic
+    dataset: cora
+    topology: feedback_rewired
+    n_agents: 10
+    topology_params:
+      rewire_prob: 0.3
+      feedback_prob: 0.4
+      base_topology: ring
+    agent_type: logistic
+    agent_params:
+      C: 1.0
+      max_iter: 1000
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1
+          failure_duration: 5
+          start_time: 10
+
+  - name: mesh_topology_logistic
+    dataset: cora
+    topology: mesh
+    n_agents: 10
+    topology_params:
+      bidirectional: true
+      edge_probability: 1.0
+    agent_type: logistic
+    agent_params:
+      C: 1.0
+      max_iter: 1000
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1
+          failure_duration: 5
+          start_time: 10
+
+  - name: scale_free_topology_logistic
+    dataset: cora
+    topology: scale_free
+    n_agents: 10
+    topology_params:
+      m: 2
+    agent_type: logistic
+    agent_params:
+      C: 1.0
+      max_iter: 1000
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1
+          failure_duration: 5
+          start_time: 10
+

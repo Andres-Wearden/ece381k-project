@@ -1,0 +1,234 @@
+# Compare All Topologies - Using Full Cora Dataset with GraphSAGE Agents
+experiments:
+  - name: star_topology_graphsage
+    dataset: cora
+    topology: star
+    n_agents: 50
+    topology_params:
+      hub_id: 0
+      bidirectional: true
+    agent_type: graphsage
+    agent_params:
+      hidden_dim: 128
+      num_layers: 3
+      aggregator: mean
+      num_samples: 15
+      lr: 0.01
+      epochs: 200
+      dropout: 0.1
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1
+          failure_duration: 5
+          start_time: 10
+
+  - name: cascade_topology_graphsage
+    dataset: cora
+    topology: cascade
+    n_agents: 50
+    topology_params:
+      skip_connections: true
+      bidirectional: true
+    agent_type: graphsage
+    agent_params:
+      hidden_dim: 128
+      num_layers: 3
+      aggregator: mean
+      num_samples: 15
+      lr: 0.01
+      epochs: 200
+      dropout: 0.1
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1
+          failure_duration: 5
+          start_time: 10
+
+  - name: feedback_rewired_topology_graphsage
+    dataset: cora
+    topology: feedback_rewired
+    n_agents: 50
+    topology_params:
+      rewire_prob: 0.3
+      feedback_prob: 0.4
+      base_topology: ring
+    agent_type: graphsage
+    agent_params:
+      hidden_dim: 128
+      num_layers: 3
+      aggregator: mean
+      num_samples: 15
+      lr: 0.01
+      epochs: 200
+      dropout: 0.1
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1
+          failure_duration: 5
+          start_time: 10
+
+  - name: ring_topology_graphsage
+    dataset: cora
+    topology: ring
+    n_agents: 50
+    topology_params:
+      bidirectional: true
+    agent_type: graphsage
+    agent_params:
+      hidden_dim: 128
+      num_layers: 3
+      aggregator: mean
+      num_samples: 15
+      lr: 0.01
+      epochs: 200
+      dropout: 0.1
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1
+          failure_duration: 5
+          start_time: 10
+
+  - name: mesh_topology_graphsage
+    dataset: cora
+    topology: mesh
+    n_agents: 50
+    topology_params:
+      bidirectional: true
+      edge_probability: 1.0
+    agent_type: graphsage
+    agent_params:
+      hidden_dim: 128
+      num_layers: 3
+      aggregator: mean
+      num_samples: 15
+      lr: 0.01
+      epochs: 200
+      dropout: 0.1
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1
+          failure_duration: 5
+          start_time: 10
+
+  - name: small_world_topology_graphsage
+    dataset: cora
+    topology: small_world
+    n_agents: 50
+    topology_params:
+      k: 4
+      rewire_prob: 0.3
+    agent_type: graphsage
+    agent_params:
+      hidden_dim: 128
+      num_layers: 3
+      aggregator: mean
+      num_samples: 15
+      lr: 0.01
+      epochs: 200
+      dropout: 0.1
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1
+          failure_duration: 5
+          start_time: 10
+
+  - name: scale_free_topology_graphsage
+    dataset: cora
+    topology: scale_free
+    n_agents: 50
+    topology_params:
+      m: 2
+    agent_type: graphsage
+    agent_params:
+      hidden_dim: 128
+      num_layers: 3
+      aggregator: mean
+      num_samples: 15
+      lr: 0.01
+      epochs: 200
+      dropout: 0.1
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1
+          failure_duration: 5
+          start_time: 10
+
+  - name: tree_topology_graphsage
+    dataset: cora
+    topology: tree
+    n_agents: 50
+    topology_params:
+      branching_factor: 2
+      bidirectional: true
+    agent_type: graphsage
+    agent_params:
+      hidden_dim: 128
+      num_layers: 3
+      aggregator: mean
+      num_samples: 15
+      lr: 0.01
+      epochs: 200
+      dropout: 0.1
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1
+          failure_duration: 5
+          start_time: 10
+
+  - name: grid_topology_graphsage
+    dataset: cora
+    topology: grid
+    n_agents: 50
+    topology_params:
+      bidirectional: true
+    agent_type: graphsage
+    agent_params:
+      hidden_dim: 128
+      num_layers: 3
+      aggregator: mean
+      num_samples: 15
+      lr: 0.01
+      epochs: 200
+      dropout: 0.1
+    n_rounds: 30
+    test_size: 0.3
+    data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1
+          failure_duration: 5
+          start_time: 10
+

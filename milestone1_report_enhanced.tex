@@ -1,0 +1,197 @@
+% Milestone 1 Report using the latex8 template
+\documentclass[times,10pt,twocolumn]{article}
+\usepackage{latex8}
+\usepackage{times}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath}
+
+% Remove page numbers (camera-ready style)
+\pagestyle{empty}
+
+% Compact list spacing
+\usepackage{enumitem}
+\setlist[itemize]{noitemsep, topsep=0pt, leftmargin=*}
+\setlist[enumerate]{noitemsep, topsep=0pt, leftmargin=*}
+
+%------------------------------------------------------------------------- 
+\begin{document}
+
+\title{Network Topology and Robustness in Multi-Agent AI Systems}
+
+\author{%
+Andres Wearden and Kartikeya Gullapalli\\
+University of Texas at Austin\\
+\{andreswearden, gkartikeyag\}@utexas.edu
+}
+
+\maketitle
+\thispagestyle{empty}
+
+\begin{abstract}
+We investigate how network topology affects multi-agent AI system performance and robustness. Our approach implements star, cascade, and feedback-rewired topologies with logistic regression agents, testing under node failures on Karate Club. Results show feedback-rewired achieves 54.5\% accuracy despite 7 failures, matching star (54.5\%, 3 failures) with lower density, and outperforming cascade (45.5\%, 3 failures).
+\end{abstract}
+\vspace{-10pt} % tighten after abstract
+
+\Section{Introduction and Motivation}\vspace{-6pt} % tighten after section title
+
+Multi-agent AI systems are ubiquitous in modern applications, from autonomous vehicle coordination to distributed content moderation. However, the network topology connecting these agents fundamentally shapes system behavior in ways that remain poorly understood. Small choices in ``who talks to whom'' can create echo chambers, single points of failure, or cascading errors that undermine collective intelligence.
+
+Our work treats multi-agent systems as \emph{communication networks} where topology directly influences performance, robustness, and failure propagation. We ask: \textbf{When does adding more agents help versus hurt?}
+
+\textbf{Main objectives:}
+\begin{itemize}
+\item Quantify how network topology affects accuracy and robustness
+\item Measure error depth and failed-node centrality impact
+\item Identify design principles for resilient architectures
+\end{itemize}
+\vspace{-6pt} % tighten before next section
+
+\Section{Previous Work}\vspace{-6pt}
+
+\textbf{Ensemble learning}\footnote{T. G. Dietterich, ``Ensemble Methods in Machine Learning,'' \emph{Multiple Classifier Systems}, 2000.} improves accuracy by combining models but assumes independent learners. \textbf{Federated learning}\footnote{H. B. McMahan et al., ``Communication-Efficient Learning of Deep Networks from Decentralized Data,'' \emph{AISTATS}, 2017.} enables distributed training but focuses on privacy rather than topology effects.
+
+Work on \textbf{multi-agent communication}\footnote{J. Foerster et al., ``Learning to Communicate with Deep Multi-Agent Reinforcement Learning,'' \emph{NIPS}, 2016.}\footnote{S. Sukhbaatar et al., ``Learning Multiagent Communication with Backpropagation,'' \emph{NIPS}, 2016.} studies learned protocols but rarely analyzes fixed network structures. \textbf{Graph neural networks}\footnote{T. N. Kipf and M. Welling, ``Semi-Supervised Classification with Graph Convolutional Networks,'' \emph{ICLR}, 2017.} leverage structure but don't address topology's effect on system robustness.
+
+Research on \textbf{network resilience}\footnote{R. Albert et al., ``Error and Attack Tolerance of Complex Networks,'' \emph{Nature}, 2000.} shows scale-free networks are vulnerable to targeted attacks. \textbf{Distributed consensus}\footnote{R. Olfati-Saber et al., ``Consensus and Cooperation in Networked Multi-Agent Systems,'' \emph{IEEE}, 2007.} studies convergence but assumes simple averaging without failures.
+\vspace{2pt}
+
+Our work combines these perspectives: we treat agents as ensemble learners where \emph{topology determines information flow}, explicitly testing robustness under failures with metrics tailored to MAS performance.
+\vspace{-6pt}
+
+\Section{Approach}\vspace{-6pt}
+
+\SubSection{Machine Learning Models}\vspace{-4pt}
+
+We implement three distinct agent types, each representing different complexity-performance tradeoffs:
+
+\textbf{Logistic Regression Agents:} Scikit-learn logistic regression with L2 regularization ($C=1.0$), L-BFGS solver, and multinomial classification for multi-class problems. Parameters include coefficients $\mathbf{w} \in \mathbb{R}^{d \times k}$ and intercepts $\mathbf{b} \in \mathbb{R}^k$ where $d$ is feature dimension and $k$ is number of classes. Agents share and average these parameters during communication rounds.
+
+\textbf{Linear Regression Agents:} Ridge regression with $\alpha=1.0$ regularization, providing the simplest and fastest training. Predictions are rounded and clipped to valid class labels. Parameter sharing follows the same coefficient-averaging protocol as logistic agents.
+
+\textbf{Neural Network Agents:} PyTorch-based two-layer feedforward networks with ReLU activation: $\mathbf{h} = \text{ReLU}(\mathbf{W}_1 \mathbf{x} + \mathbf{b}_1)$, $\mathbf{y} = \mathbf{W}_2 \mathbf{h} + \mathbf{b}_2$. Default architecture: 32 hidden units, Adam optimizer ($\text{lr}=0.01$), 50 epochs, CrossEntropyLoss. Federated averaging updates all network parameters $\{\mathbf{W}_1, \mathbf{b}_1, \mathbf{W}_2, \mathbf{b}_2\}$ by element-wise averaging of state dictionaries.
+
+\textbf{Parameter Sharing Protocol:} All agents implement weighted parameter averaging: $\theta_{\text{new}} = \frac{\sum_{j} w_{ji} \theta_j}{\sum_{j} w_{ji}}$ where $w_{ji}$ is the connection weight from agent $j$ to agent $i$. This enables knowledge transfer while preserving local model structure.
+\vspace{-6pt}
+
+\SubSection{Network Construction}\vspace{-4pt}
+
+\textbf{Nodes:} Each agent has a local machine learning model trained on a disjoint subset of data. Agents share model parameters, not raw data.
+
+\textbf{Edges:} Weighted, directed links represent communication channels. Weights ($w \in [0.3, 1.0]$) model connection strength; delays ($d \in [0, 4]$ rounds) simulate latency.
+
+\textbf{Topologies tested:}
+\begin{itemize}
+\item \textbf{Star:} Central hub connects all agents bidirectionally
+\item \textbf{Cascade:} Sequential chain with optional skip connections
+\item \textbf{Feedback-rewired:} Ring base with 30\% rewiring and 40\% feedback loops
+\end{itemize}
+\vspace{-6pt}
+
+\SubSection{Key Assumptions}\vspace{-4pt}
+
+\begin{enumerate}
+\item Synchronous rounds (discrete time steps)
+\item Honest agents (no adversarial behavior)
+\item Non-overlapping data distribution across agents
+\item Parameter updates via weighted averaging
+\item Transient failures with recovery (5 rounds)
+\item Reliable communication (no message loss)
+\end{enumerate}
+\vspace{-6pt}
+
+\SubSection{Message Passing Protocol}\vspace{-4pt}
+
+Each round: (1) agents train locally and broadcast parameters, (2) messages queue with delays, (3) receivers compute weighted average, (4) system predicts via weighted majority voting.
+\vspace{-6pt}
+
+\SubSection{Perturbations}\vspace{-4pt}
+
+Starting round 10, nodes fail with 10\% probability per round, cease operations for 5 rounds, then recover.
+\vspace{-6pt}
+
+\SubSection{Research Questions}\vspace{-4pt}
+
+\textbf{Example:} Consider 3 agents classifying social network factions. In \emph{star}, hub failure disconnects periphery agents. In \emph{cascade}, middle agent failure blocks information flow. In \emph{feedback-rewired}, multiple paths enable routing around failures.
+
+\begin{enumerate}
+\item \textbf{Q1:} Which topology achieves highest accuracy?
+\item \textbf{Q2:} Which topology is most robust to failures?
+\item \textbf{Q3:} How does network density relate to performance?
+\item \textbf{Q4:} Does error propagate differently by topology?
+\end{enumerate}
+\vspace{-6pt}
+
+\Section{Experimental Setup and Results}\vspace{-6pt}
+
+\SubSection{Datasets and Configuration}\vspace{-4pt}
+
+\textbf{Karate Club Network}\footnote{W. W. Zachary, ``An Information Flow Model for Conflict and Fission in Small Groups,'' \emph{Journal of Anthropological Research}, 1977.}: Social network of 34 members in 2 factions. Features: node degree and clustering coefficient.
+
+\textbf{Setup:} 10 agents, 20 rounds, 70/30 train-test split, logistic regression, 10\% failure rate from round 10.
+\vspace{-6pt}
+
+\SubSection{Preliminary Results}\vspace{-4pt}
+
+Table~\ref{tab:results} shows metrics across topologies.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lccc}
+\toprule
+\textbf{Topology} & \textbf{Accuracy} & \textbf{Robust.} & \textbf{Failures} \\
+\midrule
+Star & 0.545 & \textbf{0.994} & 3 \\
+Cascade & 0.455 & 0.922 & 3 \\
+Feedback & \textbf{0.545} & 0.966 & \textbf{7} \\
+\bottomrule
+\end{tabular}
+\caption{Karate Club results (11 test samples).}
+\label{tab:results}
+\vspace{-8pt} % tighten after the table
+\end{table}
+
+\textbf{Key findings:}
+
+\textbf{(Q1) Accuracy:} Star and feedback-rewired tie at 54.5\%. Cascade underperforms at 45.5\%, suggesting sequential information flow is suboptimal for social networks.
+
+\textbf{(Q2) Robustness:} Star achieves highest robustness (0.994) due to stable performance, but feedback-rewired maintains accuracy despite \emph{7 node failures} vs.\ star's 3, suggesting feedback loops enable routing around failures.
+
+\textbf{(Q3) Network efficiency:} Feedback-rewired uses 8.1\% network density while matching star performance (13.3\% density). Lower density with equal accuracy indicates superior design.
+
+\textbf{(Q4) Error propagation:} Star shows error depth of 1.72 (information centralizes quickly), cascade 4.12 (errors propagate sequentially), feedback 3.75 (moderate due to multiple paths).
+\vspace{-6pt}
+
+\textbf{Significance:} Topology critically affects performance. Feedback-rewired balances accuracy and resilience to more failures while using fewer connections.
+\vspace{-6pt}
+
+\Section{Conclusion and Short-Term Plans}\vspace{-6pt}
+
+\SubSection{Summary}\vspace{-4pt}
+
+We developed a benchmarking framework treating multi-agent systems as communication networks. Initial results demonstrate feedback-rewired topologies achieve competitive accuracy (54.5\%) with superior failure resilience (7 vs.\ 3 failures) and lower network density (8.1\% vs.\ 13.3\%).
+\vspace{2pt}
+
+\textbf{Main finding:} Network topology is an important design choice determining accuracy, robustness, and efficiency.
+\vspace{-6pt}
+
+\SubSection{Plans for Milestone 2}\vspace{-4pt}
+
+\begin{itemize}
+\item Test on Cora (100 nodes) and Power Grid (150 nodes)
+\item Sweep network sizes (5-25 agents), failure rates (0-30\%), rewiring probabilities
+\item Test linear and neural network agents
+\item Analyze betweenness centrality and convergence speed
+\item Formalize design rules based on data characteristics
+\end{itemize}
+\vspace{-6pt}
+
+\SubSection{Contributions}\vspace{-4pt}
+
+\textbf{Kartikeya:} Framework implementation, analysis of results, graph visualizations.
+
+\textbf{Andres:} Metrics design, benchmark formulation, report
+
+\end{document}
+

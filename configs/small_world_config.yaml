@@ -1,0 +1,32 @@
+# Small-World Topology Configuration (Watts-Strogatz)
+name: small_world_topology
+dataset: synthetic_classification
+dataset_params:
+  n_nodes: 100
+  n_features: 15
+  n_classes: 3
+  edge_probability: 0.15
+
+topology: small_world
+n_agents: 15
+topology_params:
+  k: 4
+  rewire_prob: 0.3
+
+agent_type: logistic
+agent_params:
+  C: 1.0
+  max_iter: 1000
+
+n_rounds: 25
+test_size: 0.3
+data_distribution: equal
+
+perturbations:
+  - type: node_failure
+    params:
+      failure_prob: 0.1
+      failure_duration: 5
+      start_time: 10
+      end_time: 20
+
