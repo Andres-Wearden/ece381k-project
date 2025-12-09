@@ -16,6 +16,12 @@ experiments:
     n_rounds: 30
     test_size: 0.3
     data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1      # Probability per round that an agent fails
+          failure_duration: 5    # Number of rounds the agent stays failed
+          start_time: 5          # Round when failures start
 
   - name: cascade_logistic
     dataset: cora
@@ -28,6 +34,12 @@ experiments:
     n_rounds: 30
     test_size: 0.3
     data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1      # Probability per round that an agent fails
+          failure_duration: 5    # Number of rounds the agent stays failed
+          start_time: 5          # Round when failures start
 
   - name: feedback_rewired_logistic
     dataset: cora
@@ -40,6 +52,12 @@ experiments:
     n_rounds: 30
     test_size: 0.3
     data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1      # Probability per round that an agent fails
+          failure_duration: 5    # Number of rounds the agent stays failed
+          start_time: 5          # Round when failures start
 
   - name: ring_logistic
     dataset: cora
@@ -52,6 +70,12 @@ experiments:
     n_rounds: 30
     test_size: 0.3
     data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1      # Probability per round that an agent fails
+          failure_duration: 5    # Number of rounds the agent stays failed
+          start_time: 5          # Round when failures start
 
   - name: mesh_logistic
     dataset: cora
@@ -64,6 +88,12 @@ experiments:
     n_rounds: 30
     test_size: 0.3
     data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1      # Probability per round that an agent fails
+          failure_duration: 5    # Number of rounds the agent stays failed
+          start_time: 5          # Round when failures start
 
   - name: small_world_logistic
     dataset: cora
@@ -79,6 +109,12 @@ experiments:
     n_rounds: 30
     test_size: 0.3
     data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1      # Probability per round that an agent fails
+          failure_duration: 5    # Number of rounds the agent stays failed
+          start_time: 5          # Round when failures start
 
   - name: scale_free_logistic
     dataset: cora
@@ -93,6 +129,12 @@ experiments:
     n_rounds: 30
     test_size: 0.3
     data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1      # Probability per round that an agent fails
+          failure_duration: 5    # Number of rounds the agent stays failed
+          start_time: 5          # Round when failures start
 
   - name: tree_logistic
     dataset: cora
@@ -107,6 +149,12 @@ experiments:
     n_rounds: 30
     test_size: 0.3
     data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1      # Probability per round that an agent fails
+          failure_duration: 5    # Number of rounds the agent stays failed
+          start_time: 5          # Round when failures start
 
   - name: grid_logistic
     dataset: cora
@@ -122,6 +170,12 @@ experiments:
     n_rounds: 30
     test_size: 0.3
     data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1      # Probability per round that an agent fails
+          failure_duration: 5    # Number of rounds the agent stays failed
+          start_time: 5          # Round when failures start
 
   # ========== NEURAL NETWORK ==========
   - name: star_neural
@@ -131,12 +185,19 @@ experiments:
     agent_type: neural
     agent_params:
       hidden_dim: 128
-      n_layers: 10
+      n_layers: 3
       lr: 0.001
       epochs: 100
+      dropout: 0.2
     n_rounds: 30
     test_size: 0.3
     data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1      # Probability per round that an agent fails
+          failure_duration: 5    # Number of rounds the agent stays failed
+          start_time: 5          # Round when failures start
 
   - name: cascade_neural
     dataset: cora
@@ -145,12 +206,19 @@ experiments:
     agent_type: neural
     agent_params:
       hidden_dim: 128
-      n_layers: 10
+      n_layers: 3
       lr: 0.001
       epochs: 100
+      dropout: 0.2
     n_rounds: 30
     test_size: 0.3
     data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1      # Probability per round that an agent fails
+          failure_duration: 5    # Number of rounds the agent stays failed
+          start_time: 5          # Round when failures start
 
   - name: feedback_rewired_neural
     dataset: cora
@@ -159,12 +227,19 @@ experiments:
     agent_type: neural
     agent_params:
       hidden_dim: 128
-      n_layers: 10
+      n_layers: 3
       lr: 0.001
       epochs: 100
+      dropout: 0.2
     n_rounds: 30
     test_size: 0.3
     data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1      # Probability per round that an agent fails
+          failure_duration: 5    # Number of rounds the agent stays failed
+          start_time: 5          # Round when failures start
 
   - name: ring_neural
     dataset: cora
@@ -173,12 +248,19 @@ experiments:
     agent_type: neural
     agent_params:
       hidden_dim: 128
-      n_layers: 10
+      n_layers: 3
       lr: 0.001
       epochs: 100
+      dropout: 0.2
     n_rounds: 30
     test_size: 0.3
     data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1      # Probability per round that an agent fails
+          failure_duration: 5    # Number of rounds the agent stays failed
+          start_time: 5          # Round when failures start
 
   - name: mesh_neural
     dataset: cora
@@ -187,12 +269,19 @@ experiments:
     agent_type: neural
     agent_params:
       hidden_dim: 128
-      n_layers: 10
+      n_layers: 3
       lr: 0.001
       epochs: 100
+      dropout: 0.2
     n_rounds: 30
     test_size: 0.3
     data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1      # Probability per round that an agent fails
+          failure_duration: 5    # Number of rounds the agent stays failed
+          start_time: 5          # Round when failures start
 
   - name: small_world_neural
     dataset: cora
@@ -204,12 +293,19 @@ experiments:
     agent_type: neural
     agent_params:
       hidden_dim: 128
-      n_layers: 10
+      n_layers: 3
       lr: 0.001
       epochs: 100
+      dropout: 0.2
     n_rounds: 30
     test_size: 0.3
     data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1      # Probability per round that an agent fails
+          failure_duration: 5    # Number of rounds the agent stays failed
+          start_time: 5          # Round when failures start
 
   - name: scale_free_neural
     dataset: cora
@@ -220,12 +316,19 @@ experiments:
     agent_type: neural
     agent_params:
       hidden_dim: 128
-      n_layers: 10
+      n_layers: 3
       lr: 0.001
       epochs: 100
+      dropout: 0.2
     n_rounds: 30
     test_size: 0.3
     data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1      # Probability per round that an agent fails
+          failure_duration: 5    # Number of rounds the agent stays failed
+          start_time: 5          # Round when failures start
 
   - name: tree_neural
     dataset: cora
@@ -236,12 +339,19 @@ experiments:
     agent_type: neural
     agent_params:
       hidden_dim: 128
-      n_layers: 10
+      n_layers: 3
       lr: 0.001
       epochs: 100
+      dropout: 0.2
     n_rounds: 30
     test_size: 0.3
     data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1      # Probability per round that an agent fails
+          failure_duration: 5    # Number of rounds the agent stays failed
+          start_time: 5          # Round when failures start
 
   - name: grid_neural
     dataset: cora
@@ -253,12 +363,19 @@ experiments:
     agent_type: neural
     agent_params:
       hidden_dim: 128
-      n_layers: 10
+      n_layers: 3
       lr: 0.001
       epochs: 100
+      dropout: 0.2
     n_rounds: 30
     test_size: 0.3
     data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1      # Probability per round that an agent fails
+          failure_duration: 5    # Number of rounds the agent stays failed
+          start_time: 5          # Round when failures start
 
   # ========== GAT ==========
   - name: star_gat
@@ -276,6 +393,12 @@ experiments:
     n_rounds: 30
     test_size: 0.3
     data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1      # Probability per round that an agent fails
+          failure_duration: 5    # Number of rounds the agent stays failed
+          start_time: 5          # Round when failures start
 
   - name: cascade_gat
     dataset: cora
@@ -292,6 +415,12 @@ experiments:
     n_rounds: 30
     test_size: 0.3
     data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1      # Probability per round that an agent fails
+          failure_duration: 5    # Number of rounds the agent stays failed
+          start_time: 5          # Round when failures start
 
   - name: feedback_rewired_gat
     dataset: cora
@@ -308,6 +437,12 @@ experiments:
     n_rounds: 30
     test_size: 0.3
     data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1      # Probability per round that an agent fails
+          failure_duration: 5    # Number of rounds the agent stays failed
+          start_time: 5          # Round when failures start
 
   - name: ring_gat
     dataset: cora
@@ -324,6 +459,12 @@ experiments:
     n_rounds: 30
     test_size: 0.3
     data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1      # Probability per round that an agent fails
+          failure_duration: 5    # Number of rounds the agent stays failed
+          start_time: 5          # Round when failures start
 
   - name: mesh_gat
     dataset: cora
@@ -340,6 +481,12 @@ experiments:
     n_rounds: 30
     test_size: 0.3
     data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1      # Probability per round that an agent fails
+          failure_duration: 5    # Number of rounds the agent stays failed
+          start_time: 5          # Round when failures start
 
   - name: small_world_gat
     dataset: cora
@@ -359,6 +506,12 @@ experiments:
     n_rounds: 30
     test_size: 0.3
     data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1      # Probability per round that an agent fails
+          failure_duration: 5    # Number of rounds the agent stays failed
+          start_time: 5          # Round when failures start
 
   - name: scale_free_gat
     dataset: cora
@@ -377,6 +530,12 @@ experiments:
     n_rounds: 30
     test_size: 0.3
     data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1      # Probability per round that an agent fails
+          failure_duration: 5    # Number of rounds the agent stays failed
+          start_time: 5          # Round when failures start
 
   - name: tree_gat
     dataset: cora
@@ -395,6 +554,12 @@ experiments:
     n_rounds: 30
     test_size: 0.3
     data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1      # Probability per round that an agent fails
+          failure_duration: 5    # Number of rounds the agent stays failed
+          start_time: 5          # Round when failures start
 
   - name: grid_gat
     dataset: cora
@@ -414,6 +579,12 @@ experiments:
     n_rounds: 30
     test_size: 0.3
     data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1      # Probability per round that an agent fails
+          failure_duration: 5    # Number of rounds the agent stays failed
+          start_time: 5          # Round when failures start
 
   # ========== RANDOM FOREST ==========
   - name: star_rf
@@ -428,6 +599,12 @@ experiments:
     n_rounds: 30
     test_size: 0.3
     data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1      # Probability per round that an agent fails
+          failure_duration: 5    # Number of rounds the agent stays failed
+          start_time: 5          # Round when failures start
 
   - name: cascade_rf
     dataset: cora
@@ -441,6 +618,12 @@ experiments:
     n_rounds: 30
     test_size: 0.3
     data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1      # Probability per round that an agent fails
+          failure_duration: 5    # Number of rounds the agent stays failed
+          start_time: 5          # Round when failures start
 
   - name: feedback_rewired_rf
     dataset: cora
@@ -454,6 +637,12 @@ experiments:
     n_rounds: 30
     test_size: 0.3
     data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1      # Probability per round that an agent fails
+          failure_duration: 5    # Number of rounds the agent stays failed
+          start_time: 5          # Round when failures start
 
   - name: ring_rf
     dataset: cora
@@ -467,6 +656,12 @@ experiments:
     n_rounds: 30
     test_size: 0.3
     data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1      # Probability per round that an agent fails
+          failure_duration: 5    # Number of rounds the agent stays failed
+          start_time: 5          # Round when failures start
 
   - name: mesh_rf
     dataset: cora
@@ -480,6 +675,12 @@ experiments:
     n_rounds: 30
     test_size: 0.3
     data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1      # Probability per round that an agent fails
+          failure_duration: 5    # Number of rounds the agent stays failed
+          start_time: 5          # Round when failures start
 
   - name: small_world_rf
     dataset: cora
@@ -496,6 +697,12 @@ experiments:
     n_rounds: 30
     test_size: 0.3
     data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1      # Probability per round that an agent fails
+          failure_duration: 5    # Number of rounds the agent stays failed
+          start_time: 5          # Round when failures start
 
   - name: scale_free_rf
     dataset: cora
@@ -511,6 +718,12 @@ experiments:
     n_rounds: 30
     test_size: 0.3
     data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1      # Probability per round that an agent fails
+          failure_duration: 5    # Number of rounds the agent stays failed
+          start_time: 5          # Round when failures start
 
   - name: tree_rf
     dataset: cora
@@ -526,6 +739,12 @@ experiments:
     n_rounds: 30
     test_size: 0.3
     data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1      # Probability per round that an agent fails
+          failure_duration: 5    # Number of rounds the agent stays failed
+          start_time: 5          # Round when failures start
 
   - name: grid_rf
     dataset: cora
@@ -542,4 +761,10 @@ experiments:
     n_rounds: 30
     test_size: 0.3
     data_distribution: equal
+    perturbations:
+      - type: node_failure
+        params:
+          failure_prob: 0.1      # Probability per round that an agent fails
+          failure_duration: 5    # Number of rounds the agent stays failed
+          start_time: 5          # Round when failures start
 

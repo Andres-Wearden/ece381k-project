@@ -171,30 +171,41 @@ class LinearAgent(Agent):
 class SimpleNN(nn.Module):
     """Neural network for agents with configurable depth"""
     
-    def __init__(self, n_features: int, n_classes: int, hidden_dim: int = 32, n_layers: int = 10):
+    def __init__(self, n_features: int, n_classes: int, hidden_dim: int = 32, n_layers: int = 3, dropout: float = 0.1):
         super().__init__()
         self.n_layers = n_layers
         self.hidden_dim = hidden_dim
         self.relu = nn.ReLU()
+        self.dropout = nn.Dropout(dropout)
+        
+        # Limit layers to prevent vanishing gradients (max 5 layers)
+        n_layers = min(n_layers, 5)
         
         # Build layers dynamically
         self.layers = nn.ModuleList()
+        self.batch_norms = nn.ModuleList()
         
         # First layer: input → hidden
         self.layers.append(nn.Linear(n_features, hidden_dim))
+        self.batch_norms.append(nn.BatchNorm1d(hidden_dim))
         
         # Hidden layers: hidden → hidden (n_layers - 2 of these)
         for _ in range(n_layers - 2):
             self.layers.append(nn.Linear(hidden_dim, hidden_dim))
+            self.batch_norms.append(nn.BatchNorm1d(hidden_dim))
         
         # Final layer: hidden → output
         self.layers.append(nn.Linear(hidden_dim, n_classes))
     
     def forward(self, x):
-        # Apply all layers except the last with ReLU
+        # Apply all layers except the last with ReLU, BatchNorm, and Dropout
         for i in range(len(self.layers) - 1):
             x = self.layers[i](x)
+            # BatchNorm only works for 2D tensors [batch, features]
+            if x.dim() == 2 and x.size(0) > 1:  # Only apply if batch size > 1
+                x = self.batch_norms[i](x)
             x = self.relu(x)
+            x = self.dropout(x)
         
         # Final layer (no activation - raw logits)
         x = self.layers[-1](x)
@@ -206,17 +217,20 @@ class NeuralAgent(Agent):
     
     def __init__(self, agent_id: int, n_features: int, n_classes: int,
                  hidden_dim: int = 32, lr: float = 0.01, epochs: int = 50,
-                 n_layers: int = 10,
+                 n_layers: int = 3, dropout: float = 0.1,
                  aggregation_strategy: Optional[AggregationStrategy] = None):
         super().__init__(agent_id, n_features, n_classes)
         self.hidden_dim = hidden_dim
         self.lr = lr
         self.epochs = epochs
-        self.n_layers = n_layers
-        self.model = SimpleNN(n_features, n_classes, hidden_dim, n_layers=n_layers)
+        self.n_layers = min(n_layers, 5)  # Limit to 5 layers max
+        self.dropout = dropout
+        self.model = SimpleNN(n_features, n_classes, hidden_dim, n_layers=self.n_layers, dropout=dropout)
         self.trained = False
         self.device = torch.device('cpu')
         self.aggregation_strategy = aggregation_strategy or AverageAggregation()
+        self.feature_mean = None
+        self.feature_std = None
     
     def train(self, X: np.ndarray, y: np.ndarray):
         """Train neural network"""
@@ -227,38 +241,71 @@ class NeuralAgent(Agent):
             return
         
         try:
-            X_tensor = torch.FloatTensor(X).to(self.device)
+            # Normalize features (important for neural networks)
+            if self.feature_mean is None:
+                self.feature_mean = np.mean(X, axis=0, keepdims=True)
+                self.feature_std = np.std(X, axis=0, keepdims=True) + 1e-8  # Add small epsilon to avoid division by zero
+            X_normalized = (X - self.feature_mean) / self.feature_std
+            
+            X_tensor = torch.FloatTensor(X_normalized).to(self.device)
             y_tensor = torch.LongTensor(y).to(self.device)
             
             criterion = nn.CrossEntropyLoss()
-            optimizer = optim.Adam(self.model.parameters(), lr=self.lr)
+            optimizer = optim.Adam(self.model.parameters(), lr=self.lr, weight_decay=1e-5)
             
             self.model.train()
+            best_loss = float('inf')
+            patience = 10
+            patience_counter = 0
+            
             for epoch in range(self.epochs):
                 optimizer.zero_grad()
                 outputs = self.model(X_tensor)
                 loss = criterion(outputs, y_tensor)
                 loss.backward()
+                
+                # Gradient clipping to prevent exploding gradients
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
+                
                 optimizer.step()
+                
+                # Early stopping if loss doesn't improve
+                if loss.item() < best_loss:
+                    best_loss = loss.item()
+                    patience_counter = 0
+                else:
+                    patience_counter += 1
+                    if patience_counter >= patience and epoch > 10:
+                        break
             
             self.trained = True
-        except:
+        except Exception as e:
+            print(f"Neural network training error for agent {self.agent_id}: {e}")
             self.trained = False
     
     def predict(self, X: np.ndarray) -> np.ndarray:
         """Make predictions"""
         if self.failed or not self.trained:
-            return np.zeros(len(X), dtype=int)
+            # Return random predictions instead of all zeros
+            return np.random.randint(0, self.n_classes, size=len(X))
         
         try:
+            # Normalize features using stored statistics
+            if self.feature_mean is not None and self.feature_std is not None:
+                X_normalized = (X - self.feature_mean) / self.feature_std
+            else:
+                X_normalized = X
+            
             self.model.eval()
             with torch.no_grad():
-                X_tensor = torch.FloatTensor(X).to(self.device)
+                X_tensor = torch.FloatTensor(X_normalized).to(self.device)
                 outputs = self.model(X_tensor)
                 _, predicted = torch.max(outputs, 1)
                 return predicted.cpu().numpy()
-        except:
-            return np.zeros(len(X), dtype=int)
+        except Exception as e:
+            print(f"Neural network prediction error for agent {self.agent_id}: {e}")
+            # Return random predictions instead of all zeros
+            return np.random.randint(0, self.n_classes, size=len(X))
     
     def get_model_params(self) -> Dict[str, Any]:
         """Get model parameters"""

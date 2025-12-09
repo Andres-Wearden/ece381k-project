@@ -43,6 +43,7 @@ class SimulationEngine:
             'accuracy': [],
             'failed_nodes': [],
             'message_counts': [],
+            'communication_costs': [],
             'predictions': []
         }
         self.current_time = 0
@@ -251,6 +252,7 @@ class SimulationEngine:
         """Execute one round of communication between agents"""
         # Collect messages to send
         messages_to_send = []
+        communication_cost = 0  # Track total communication cost
         
         for u, v in self.network.edges():
             if not self.agents[u].failed:
@@ -258,6 +260,12 @@ class SimulationEngine:
                 params = self.agents[u].get_model_params()
                 weight = self.network[u][v].get('weight', 1.0)
                 delay = self.network[u][v].get('delay', 0)
+                
+                # Communication cost = number of parameters sent
+                # For simplicity, we count the number of edges used (each edge = 1 message)
+                # In practice, cost could be based on parameter size
+                param_size = len(params) if isinstance(params, (list, np.ndarray)) else 1
+                communication_cost += param_size
                 
                 message = {
                     'params': params,
@@ -274,6 +282,8 @@ class SimulationEngine:
             # Set timestamp
             if self.agents[receiver].message_queue:
                 self.agents[receiver].message_queue[-1]['timestamp'] = self.current_time
+        
+        return communication_cost
     
     def update_agents(self):
         """Update agents based on received messages"""
@@ -360,6 +370,7 @@ class SimulationEngine:
         self.history['accuracy'].append(initial_accuracy)
         self.history['failed_nodes'].append(sum(1 for a in self.agents if a.failed))
         self.history['message_counts'].append(0)
+        self.history['communication_costs'].append(0)
         
         # Run simulation rounds
         iterator = tqdm(range(n_rounds), desc="Simulation") if verbose else range(n_rounds)
@@ -371,8 +382,8 @@ class SimulationEngine:
             for perturbation in self.perturbations:
                 perturbation.apply(self.agents, self.network, self.current_time)
             
-            # Communication phase
-            self.communicate()
+            # Communication phase - returns communication cost
+            comm_cost = self.communicate()
             
             # Update phase
             self.update_agents()
@@ -385,6 +396,7 @@ class SimulationEngine:
             self.history['accuracy'].append(accuracy)
             self.history['failed_nodes'].append(failed_count)
             self.history['message_counts'].append(message_count)
+            self.history['communication_costs'].append(comm_cost)
             
             if verbose:
                 iterator.set_postfix({
@@ -403,6 +415,8 @@ class SimulationEngine:
             'accuracy_std': np.std(self.history['accuracy']),
             'max_failed_nodes': max(self.history['failed_nodes']),
             'total_messages': self.history['message_counts'][-1],
+            'total_communication_cost': sum(self.history['communication_costs']),
+            'avg_communication_cost_per_round': np.mean(self.history['communication_costs'][1:]) if len(self.history['communication_costs']) > 1 else 0,
             'network_info': {
                 'n_agents': len(self.agents),
                 'n_edges': self.network.number_of_edges(),
@@ -417,6 +431,7 @@ class SimulationEngine:
             'accuracy': [],
             'failed_nodes': [],
             'message_counts': [],
+            'communication_costs': [],
             'predictions': []
         }
         for agent in self.agents:

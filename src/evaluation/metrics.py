@@ -2,7 +2,7 @@
 
 import numpy as np
 import networkx as nx
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from sklearn.metrics import accuracy_score, f1_score
 
 
@@ -21,15 +21,22 @@ def calculate_accuracy(predictions: np.ndarray, labels: np.ndarray) -> float:
 
 
 def calculate_robustness(accuracy_history: List[float], 
-                         failure_history: List[int]) -> float:
+                         failure_history: List[int],
+                         network: Optional[nx.DiGraph] = None) -> float:
     """
-    Calculate system robustness as stability under perturbations
+    Calculate system robustness using a comprehensive metric that considers:
+    1. Performance degradation during failures (resilience)
+    2. Network connectivity under failures (topology resilience)
+    3. Failure severity and frequency
     
-    Robustness = (1 - accuracy_variance) * (1 - failure_impact)
+    Based on network robustness literature:
+    - Robustness measures how well a system maintains functionality under perturbations
+    - Should account for both performance (accuracy) and structure (connectivity)
     
     Args:
         accuracy_history: List of accuracy values over time
         failure_history: List of failed node counts over time
+        network: Optional network graph for topology-aware robustness
         
     Returns:
         Robustness score (0-1, higher is better)
@@ -37,32 +44,107 @@ def calculate_robustness(accuracy_history: List[float],
     if len(accuracy_history) < 2:
         return 1.0
     
-    # Measure accuracy stability
-    accuracy_var = np.var(accuracy_history)
-    stability = 1.0 / (1.0 + accuracy_var)
+    accuracy_mean = np.mean(accuracy_history)
+    if accuracy_mean <= 0:
+        return 0.0
     
-    # Measure failure impact
+    n_agents = max(failure_history) if failure_history else len(accuracy_history)
+    if n_agents == 0:
+        n_agents = 1
+    
+    # ========== COMPONENT 1: Performance Resilience ==========
+    # How well does accuracy maintain during failures?
+    performance_resilience = 1.0
+    
     if max(failure_history) > 0:
-        # Find accuracy drop during failures
         failure_indices = [i for i, f in enumerate(failure_history) if f > 0]
-        if failure_indices:
-            accuracies_with_failures = [accuracy_history[i] for i in failure_indices]
-            accuracies_without_failures = [accuracy_history[i] for i, f in enumerate(failure_history) if f == 0]
+        normal_indices = [i for i, f in enumerate(failure_history) if f == 0]
+        
+        if failure_indices and normal_indices:
+            acc_with_failures = [accuracy_history[i] for i in failure_indices]
+            acc_without_failures = [accuracy_history[i] for i in normal_indices]
             
-            if accuracies_without_failures:
-                avg_normal = np.mean(accuracies_without_failures)
-                avg_failure = np.mean(accuracies_with_failures)
-                failure_impact = max(0, avg_normal - avg_failure)
+            avg_with_failures = np.mean(acc_with_failures)
+            avg_without_failures = np.mean(acc_without_failures)
+            
+            if avg_without_failures > 0:
+                # Performance ratio: how well accuracy is maintained
+                performance_resilience = avg_with_failures / avg_without_failures
             else:
-                failure_impact = 0.0
-        else:
-            failure_impact = 0.0
+                performance_resilience = 0.0
+        elif failure_indices:
+            # Only failures - compare to mean
+            avg_with_failures = np.mean([accuracy_history[i] for i in failure_indices])
+            performance_resilience = avg_with_failures / accuracy_mean if accuracy_mean > 0 else 0.0
+    
+    # ========== COMPONENT 2: Failure Impact ==========
+    # Penalize based on failure severity and frequency
+    failure_impact = 0.0
+    
+    if max(failure_history) > 0:
+        # Average fraction of nodes that failed
+        avg_failure_fraction = np.mean([f / n_agents for f in failure_history if f > 0])
+        # Frequency of failures
+        failure_frequency = sum(1 for f in failure_history if f > 0) / len(failure_history)
+        # Maximum concurrent failures
+        max_failures = max(failure_history)
+        max_failure_fraction = max_failures / n_agents if n_agents > 0 else 0
+        
+        # Combined failure impact (weighted)
+        # More failures = higher impact, but topology can mitigate this
+        failure_impact = 0.4 * avg_failure_fraction + 0.3 * failure_frequency + 0.3 * max_failure_fraction
+        failure_impact = min(1.0, failure_impact)
+    
+    # ========== COMPONENT 3: Network Topology Resilience ==========
+    # If network is provided, calculate topology-based resilience
+    topology_resilience = 1.0
+    
+    if network is not None and max(failure_history) > 0:
+        try:
+            # Calculate network metrics that indicate robustness
+            # 1. Average shortest path length (lower is better for resilience)
+            if nx.is_strongly_connected(network) or nx.is_connected(network.to_undirected()):
+                try:
+                    avg_path_length = nx.average_shortest_path_length(network.to_undirected() if network.is_directed() else network)
+                    # Normalize: shorter paths = more resilient (inverse relationship)
+                    # Typical range: 1 (mesh) to ~N/2 (chain), normalize to 0-1
+                    max_path = len(network.nodes()) - 1
+                    topology_resilience = 1.0 - (avg_path_length - 1) / max_path if max_path > 1 else 1.0
+                    topology_resilience = max(0.0, min(1.0, topology_resilience))
+                except:
+                    pass
+            
+            # 2. Network density (higher density = more redundant paths = more robust)
+            density = nx.density(network)
+            # Density ranges from 0 to 1, use it directly as a resilience factor
+            topology_resilience = 0.6 * topology_resilience + 0.4 * density
+        except:
+            # If network analysis fails, use default
+            topology_resilience = 0.8  # Moderate resilience assumption
+    
+    # ========== COMPONENT 4: Stability ==========
+    # How stable is accuracy over time?
+    accuracy_cv = np.std(accuracy_history) / accuracy_mean if accuracy_mean > 0 else 1.0
+    stability = 1.0 / (1.0 + 3.0 * accuracy_cv)  # Moderate sensitivity to variation
+    
+    # ========== COMBINED ROBUSTNESS ==========
+    # Robustness = Performance Resilience × (1 - Failure Impact) × Topology Resilience × Stability
+    # This formula:
+    # - Rewards systems that maintain accuracy during failures (performance_resilience)
+    # - Penalizes systems with high failure impact
+    # - Accounts for network topology structure (topology_resilience)
+    # - Considers stability over time
+    
+    # If no failures, robustness depends on stability and topology
+    if max(failure_history) == 0:
+        robustness = stability * topology_resilience * 0.95  # Slight penalty for no failure testing
     else:
-        failure_impact = 0.0
+        # With failures: combine all factors
+        # Performance resilience is primary, but failure impact reduces it
+        # Topology resilience and stability modulate the result
+        robustness = performance_resilience * (1.0 - 0.3 * failure_impact) * topology_resilience * stability
     
-    # Combined robustness score
-    robustness = stability * (1.0 - failure_impact)
-    
+    # Ensure reasonable range
     return max(0.0, min(1.0, robustness))
 
 
@@ -245,7 +327,7 @@ def evaluate_system(agents: List, network: nx.DiGraph,
     
     # Calculate other metrics
     if accuracy_history and failure_history:
-        robustness = calculate_robustness(accuracy_history, failure_history)
+        robustness = calculate_robustness(accuracy_history, failure_history, network)
     else:
         robustness = 1.0
     

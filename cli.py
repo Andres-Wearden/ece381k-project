@@ -21,7 +21,8 @@ from src.evaluation import evaluate_system
 from src.utils import (generate_report, save_results_to_csv, 
                       plot_accuracy_history, plot_network, 
                       plot_comparison, create_summary_plots,
-                      create_comprehensive_comparison)
+                      create_comprehensive_comparison,
+                      plot_robustness_and_communication_cost)
 
 
 AGENT_TYPES = {
@@ -162,14 +163,27 @@ def run_single_experiment(config: dict, verbose: bool = True):
         results['history']['failed_nodes']
     )
     
-    # Combine results
+    # Combine results (include communication cost from simulation)
     results.update(eval_results)
+    # Ensure communication cost is included
+    if 'total_communication_cost' not in results:
+        results['total_communication_cost'] = sum(results.get('history', {}).get('communication_costs', []))
+    if 'avg_communication_cost_per_round' not in results:
+        comm_costs = results.get('history', {}).get('communication_costs', [])
+        if comm_costs and len(comm_costs) > 1:
+            results['avg_communication_cost_per_round'] = np.mean(comm_costs[1:])
+        else:
+            results['avg_communication_cost_per_round'] = 0
     
     if verbose:
         print(f"\nResults:")
         print(f"  Final Accuracy: {results['final_accuracy']:.4f}")
         print(f"  Average Accuracy: {results['average_accuracy']:.4f}")
         print(f"  Robustness: {results['robustness']:.4f}")
+        if 'total_communication_cost' in results:
+            print(f"  Total Communication Cost: {results['total_communication_cost']:.0f}")
+        if 'avg_communication_cost_per_round' in results:
+            print(f"  Avg Communication Cost/Round: {results['avg_communication_cost_per_round']:.2f}")
     
     return results, sim
 
@@ -218,6 +232,9 @@ def run_benchmark(config_path: str, output_dir: str = 'outputs', verbose: bool =
         # Create comprehensive comparison if we have many experiments (likely all models × all topologies)
         if len(all_results) >= 20:  # Threshold for comprehensive comparison
             create_comprehensive_comparison(all_results, output_dir)
+        
+        # Create robustness and communication cost charts
+        plot_robustness_and_communication_cost(all_results, output_dir)
     
     # Generate report
     report_path = os.path.join(output_dir, 'benchmark_report.md')

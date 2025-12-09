@@ -292,24 +292,83 @@ def create_comprehensive_comparison(all_results: Dict[str, Any], output_dir: str
                 dpi=300, bbox_inches='tight')
     plt.close()
     
-    # ========== PLOT 2: Robustness Heatmap ==========
-    fig, ax = plt.subplots(figsize=(14, 8))
-    sns.heatmap(robustness_matrix, annot=True, fmt='.3f', 
-               xticklabels=[t.replace('_', ' ').title() for t in topologies],
-               yticklabels=[m.title() for m in models],
-               cmap='YlOrRd', ax=ax, cbar_kws={'label': 'Robustness'},
-               vmin=0, vmax=1)
-    ax.set_title('Robustness: Models × Topologies', fontsize=16, fontweight='bold')
-    ax.set_xlabel('Network Topology', fontsize=12)
-    ax.set_ylabel('Agent Model', fontsize=12)
-    plt.xticks(rotation=45, ha='right')
-    plt.yticks(rotation=0)
+    # ========== PLOT 2: Model Performance (Accuracy) Bar Chart (Grouped by Model) ==========
+    fig, ax = plt.subplots(figsize=(16, 8))
+    
+    # Prepare data for grouped bar chart
+    x = np.arange(len(topologies))
+    width = 0.2  # Width of bars
+    colors = ['#FF6B35', '#4ECDC4', '#45B7D1', '#FFA07A']  # Orange, Teal, Blue, Light Orange
+    
+    # Create grouped bars - convert accuracy to percentage (0-100 scale)
+    for model_idx, model in enumerate(models):
+        accuracy_values = [avg_accuracy_matrix[model_idx, topo_idx] * 100 for topo_idx in range(len(topologies))]
+        bars = ax.bar(x + model_idx * width, accuracy_values, width, 
+                     label=model.title(), color=colors[model_idx % len(colors)], 
+                     alpha=0.8, edgecolor='black', linewidth=1)
+        
+        # Add value labels on bars
+        for bar, val in zip(bars, accuracy_values):
+            if val > 1.0:  # Only label if value is significant
+                height = bar.get_height()
+                ax.text(bar.get_x() + bar.get_width()/2., height + 1.0,
+                       f'{val:.1f}', ha='center', va='bottom', fontsize=8, fontweight='bold')
+    
+    ax.set_xlabel('Network Topology', fontsize=12, fontweight='bold')
+    ax.set_ylabel('Accuracy (%)', fontsize=12, fontweight='bold')
+    ax.set_title('Model Performance Across Network Topologies', 
+                 fontsize=16, fontweight='bold')
+    ax.set_xticks(x + width * (len(models) - 1) / 2)
+    ax.set_xticklabels([t.replace('_', ' ').title() for t in topologies], 
+                       rotation=45, ha='right', fontsize=10)
+    ax.set_ylim([0, 105])
+    ax.legend(loc='upper left', fontsize=10, framealpha=0.9)
+    ax.grid(True, alpha=0.3, axis='y')
+    
+    plt.tight_layout()
+    plt.savefig(os.path.join(output_dir, 'model_performance_topologies.png'), 
+                dpi=300, bbox_inches='tight')
+    plt.close()
+    
+    # ========== PLOT 3: Robustness Bar Chart (Grouped by Model) ==========
+    fig, ax = plt.subplots(figsize=(16, 8))
+    
+    # Prepare data for grouped bar chart
+    x = np.arange(len(topologies))
+    width = 0.2  # Width of bars
+    colors = ['#2E86AB', '#A23B72', '#F18F01', '#06A77D']  # Different color for each model
+    
+    # Create grouped bars
+    for model_idx, model in enumerate(models):
+        robustness_values = [robustness_matrix[model_idx, topo_idx] for topo_idx in range(len(topologies))]
+        bars = ax.bar(x + model_idx * width, robustness_values, width, 
+                     label=model.title(), color=colors[model_idx % len(colors)], 
+                     alpha=0.8, edgecolor='black', linewidth=1)
+        
+        # Add value labels on bars
+        for bar, val in zip(bars, robustness_values):
+            if val > 0.01:  # Only label if value is significant
+                height = bar.get_height()
+                ax.text(bar.get_x() + bar.get_width()/2., height + 0.01,
+                       f'{val:.3f}', ha='center', va='bottom', fontsize=8, fontweight='bold')
+    
+    ax.set_xlabel('Network Topology', fontsize=12, fontweight='bold')
+    ax.set_ylabel('Robustness', fontsize=12, fontweight='bold')
+    ax.set_title('Robustness: Models × Topologies\n(10% Failure Probability)', 
+                 fontsize=16, fontweight='bold')
+    ax.set_xticks(x + width * (len(models) - 1) / 2)
+    ax.set_xticklabels([t.replace('_', ' ').title() for t in topologies], 
+                       rotation=45, ha='right', fontsize=10)
+    ax.set_ylim([0, 1.1])
+    ax.legend(loc='upper left', fontsize=10, framealpha=0.9)
+    ax.grid(True, alpha=0.3, axis='y')
+    
     plt.tight_layout()
     plt.savefig(os.path.join(output_dir, 'robustness_heatmap_models_topologies.png'), 
                 dpi=300, bbox_inches='tight')
     plt.close()
     
-    # ========== PLOT 3: Average Accuracy by Model ==========
+    # ========== PLOT 4: Average Accuracy by Model ==========
     fig, ax = plt.subplots(figsize=(12, 6))
     model_avg_acc = np.mean(avg_accuracy_matrix, axis=1)
     bars = ax.bar(range(len(models)), model_avg_acc, 
@@ -331,7 +390,7 @@ def create_comprehensive_comparison(all_results: Dict[str, Any], output_dir: str
                 dpi=300, bbox_inches='tight')
     plt.close()
     
-    # ========== PLOT 4: Average Accuracy by Topology ==========
+    # ========== PLOT 5: Average Accuracy by Topology ==========
     fig, ax = plt.subplots(figsize=(12, 6))
     topo_avg_acc = np.mean(avg_accuracy_matrix, axis=0)
     bars = ax.bar(range(len(topologies)), topo_avg_acc,
@@ -354,7 +413,7 @@ def create_comprehensive_comparison(all_results: Dict[str, Any], output_dir: str
                 dpi=300, bbox_inches='tight')
     plt.close()
     
-    # ========== PLOT 5: Accuracy Evolution by Model ==========
+    # ========== PLOT 6: Accuracy Evolution by Model ==========
     fig, axes = plt.subplots(2, 4, figsize=(20, 10))
     axes = axes.flatten()
     
@@ -387,7 +446,7 @@ def create_comprehensive_comparison(all_results: Dict[str, Any], output_dir: str
                 dpi=300, bbox_inches='tight')
     plt.close()
     
-    # ========== PLOT 6: Accuracy Evolution by Topology ==========
+    # ========== PLOT 7: Accuracy Evolution by Topology ==========
     fig, axes = plt.subplots(3, 3, figsize=(18, 15))
     axes = axes.flatten()
     
@@ -417,7 +476,7 @@ def create_comprehensive_comparison(all_results: Dict[str, Any], output_dir: str
                 dpi=300, bbox_inches='tight')
     plt.close()
     
-    # ========== PLOT 7: Best Combinations ==========
+    # ========== PLOT 8: Best Combinations ==========
     # Find top 10 best combinations
     best_combinations = []
     for exp_name, results in all_results.items():
@@ -496,4 +555,113 @@ def create_comprehensive_comparison(all_results: Dict[str, Any], output_dir: str
     plt.close()
     
     print(f"Created comprehensive comparison plots in {output_dir}")
+
+
+def plot_robustness_and_communication_cost(all_results: Dict[str, Any], output_dir: str):
+    """
+    Create bar charts showing robustness and communication cost by topology
+    
+    Args:
+        all_results: Dictionary mapping experiment names to results
+        output_dir: Directory to save plots
+    """
+    # Extract topology and model from experiment names
+    topology_data = {}  # topology -> {model -> {robustness, comm_cost}}
+    
+    for exp_name, results in all_results.items():
+        # Parse experiment name (format: topology_model)
+        parts = exp_name.split('_')
+        if len(parts) >= 2:
+            # Find where model name starts (logistic, neural, gat, rf)
+            model_keywords = ['logistic', 'neural', 'gat', 'rf', 'gnn', 'graphsage', 'gin']
+            model_idx = None
+            for i, part in enumerate(parts):
+                if part in model_keywords:
+                    model_idx = i
+                    break
+            
+            if model_idx is not None:
+                topology = '_'.join(parts[:model_idx])
+                model = parts[model_idx]
+                
+                if topology not in topology_data:
+                    topology_data[topology] = {}
+                
+                robustness = results.get('robustness', 0)
+                comm_cost = results.get('total_communication_cost', 0)
+                if comm_cost == 0:
+                    # Fallback to avg per round if total not available
+                    comm_cost = results.get('avg_communication_cost_per_round', 0) * results.get('network_info', {}).get('n_rounds', 30)
+                
+                topology_data[topology][model] = {
+                    'robustness': robustness,
+                    'communication_cost': comm_cost
+                }
+    
+    if not topology_data:
+        print("Warning: Could not extract topology/model information from results")
+        return
+    
+    # Aggregate by topology (average across models)
+    topology_robustness = {}
+    topology_comm_cost = {}
+    
+    for topology, model_data in topology_data.items():
+        robustnesses = [data['robustness'] for data in model_data.values()]
+        comm_costs = [data['communication_cost'] for data in model_data.values()]
+        
+        topology_robustness[topology] = np.mean(robustnesses) if robustnesses else 0
+        topology_comm_cost[topology] = np.mean(comm_costs) if comm_costs else 0
+    
+    # Sort topologies by name for consistent ordering
+    sorted_topologies = sorted(topology_robustness.keys())
+    
+    # Create figure with two subplots
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
+    
+    # Plot 1: Robustness by Topology
+    robustness_values = [topology_robustness[t] for t in sorted_topologies]
+    bars1 = ax1.bar(range(len(sorted_topologies)), robustness_values, 
+                    color='#2E86AB', alpha=0.8, edgecolor='black', linewidth=1.5)
+    ax1.set_xlabel('Topology', fontsize=12, fontweight='bold')
+    ax1.set_ylabel('Robustness', fontsize=12, fontweight='bold')
+    ax1.set_title('Robustness by Topology\n(10% Failure Probability)', 
+                  fontsize=14, fontweight='bold')
+    ax1.set_xticks(range(len(sorted_topologies)))
+    ax1.set_xticklabels([t.replace('_', ' ').title() for t in sorted_topologies], 
+                        rotation=45, ha='right', fontsize=10)
+    ax1.set_ylim([0, 1.05])
+    ax1.grid(True, alpha=0.3, axis='y')
+    
+    # Add value labels on bars
+    for i, (bar, val) in enumerate(zip(bars1, robustness_values)):
+        height = bar.get_height()
+        ax1.text(bar.get_x() + bar.get_width()/2., height + 0.01,
+                f'{val:.3f}', ha='center', va='bottom', fontsize=9, fontweight='bold')
+    
+    # Plot 2: Communication Cost by Topology
+    comm_cost_values = [topology_comm_cost[t] for t in sorted_topologies]
+    bars2 = ax2.bar(range(len(sorted_topologies)), comm_cost_values,
+                    color='#F18F01', alpha=0.8, edgecolor='black', linewidth=1.5)
+    ax2.set_xlabel('Topology', fontsize=12, fontweight='bold')
+    ax2.set_ylabel('Total Communication Cost', fontsize=12, fontweight='bold')
+    ax2.set_title('Communication Cost by Topology\n(10% Failure Probability)', 
+                  fontsize=14, fontweight='bold')
+    ax2.set_xticks(range(len(sorted_topologies)))
+    ax2.set_xticklabels([t.replace('_', ' ').title() for t in sorted_topologies], 
+                        rotation=45, ha='right', fontsize=10)
+    ax2.grid(True, alpha=0.3, axis='y')
+    
+    # Add value labels on bars
+    for i, (bar, val) in enumerate(zip(bars2, comm_cost_values)):
+        height = bar.get_height()
+        ax2.text(bar.get_x() + bar.get_width()/2., height + max(comm_cost_values) * 0.01,
+                f'{int(val)}', ha='center', va='bottom', fontsize=9, fontweight='bold')
+    
+    plt.tight_layout()
+    plt.savefig(os.path.join(output_dir, 'robustness_communication_cost_by_topology.png'), 
+                dpi=300, bbox_inches='tight')
+    plt.close()
+    
+    print(f"Created robustness and communication cost charts in {output_dir}")
 
