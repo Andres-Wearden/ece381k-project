@@ -1,0 +1,305 @@
+    \documentclass[times,10pt,twocolumn]{article}
+    \usepackage{latex8}
+    \usepackage{times}
+    \usepackage{graphicx}
+    \usepackage{booktabs}
+    \usepackage{amsmath,amssymb,amsfonts}
+    \usepackage{algorithmic}
+    \usepackage{textcomp}
+    \usepackage{xcolor}
+    \usepackage{url}
+    \usepackage{multirow}
+    \usepackage{listings}
+    \usepackage{cite}
+
+    % Remove page numbers (camera-ready style)
+    \pagestyle{empty}
+
+    % Make columns not stretch to equal height (lets space savings show)
+    \raggedbottom
+
+    % Tighter floats, captions, math, and paragraphs
+    \setlength{\textfloatsep}{8pt plus 1pt minus 2pt}
+    \setlength{\intextsep}{8pt plus 1pt minus 2pt}
+    \setlength{\dbltextfloatsep}{8pt plus 1pt minus 2pt}
+    \setlength{\abovecaptionskip}{3pt}
+    \setlength{\belowcaptionskip}{0pt}
+    \setlength{\abovedisplayskip}{6pt}
+    \setlength{\belowdisplayskip}{6pt}
+    \setlength{\abovedisplayshortskip}{4pt}
+    \setlength{\belowdisplayshortskip}{4pt}
+    \setlength{\parskip}{0pt}
+
+    % Compact list spacing
+    \usepackage{enumitem}
+    \setlist[itemize]{noitemsep, topsep=0pt, leftmargin=*}
+    \setlist[enumerate]{noitemsep, topsep=0pt, leftmargin=*}
+
+    % Patch section spacing to mimic latex8 style
+    \makeatletter
+    \renewcommand\section{\@startsection{section}{1}{\z@}{-8pt}{2pt}{\large\bf}}
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}{-6pt}{1pt}{\normalsize\bf}}
+    \makeatother
+
+    \lstset{
+    basicstyle=\ttfamily\footnotesize,
+    breaklines=true,
+    frame=single,
+    language=Python
+    }
+
+    \begin{document}
+
+    \title{Multi-Agent AI Systems: Network Topology Impact on Learning Performance}
+
+    \author{%
+    Kartikeya Gullapalli and Andres Wearden\\
+    ECE 381K -- Multi-Agent Systems\\
+    The University of Texas at Austin\\
+    Austin, Texas, USA\\
+    \{kartikeya, andres.wearden\}@utexas.edu
+    }
+
+    \maketitle
+    \thispagestyle{empty}
+
+    \begin{abstract}
+    This project investigates how network topology influences learning performance in multi-agent AI systems. We evaluate four model types across five communication topologies on the Cora citation dataset using a distributed training framework. Our results show that simpler models, such as Logistic Regression, outperform more complex architectures under data-sparse distributed settings, and that topology choice significantly affects convergence behavior and robustness. We also identify and fix key implementation bugs in GAT and Neural Network models, yielding substantial accuracy improvements and enabling reliable multi-agent training.
+    These improvements highlight the importance of correct model synchronization and demonstrate that even small implementation fixes can substantially enhance scalability and distributed learning reliability.
+    \end{abstract}
+
+    \vspace{2pt}
+    \noindent\textbf{Keywords:} Multi-agent systems, distributed learning, network topology, graph neural networks, federated learning
+
+    \section{Introduction and Motivation}
+
+    \subsection{Problem Statement}
+    Multi-agent AI systems are increasingly deployed in real-world applications such as distributed sensor networks, federated learning, and collaborative robotics. A critical yet understudied question is: \textit{How does the network topology connecting agents affect overall system performance?} While prior work has focused on centralized training or simple topologies, the interaction between model complexity, data distribution, and network structure remains poorly understood.
+
+    \subsection{Main Challenges and Objectives}
+    Our work addresses four key challenges:
+
+    \begin{enumerate}
+        \item \textbf{Data Sparsity}: Each agent has limited local data ($\sim$190 samples with 10 agents), making learning challenging
+        \item \textbf{Communication Constraints}: Not all agents can communicate directly; information must propagate through the network
+        \item \textbf{Model-Topology Interaction}: Complex models may require different connectivity patterns than simple ones
+        \item \textbf{Robustness}: Systems must handle node failures and maintain performance under perturbations
+    \end{enumerate}
+
+    \subsection{Novel Contributions}
+    \begin{itemize}
+        \item \textbf{Comprehensive Framework}: First systematic comparison of 4 model types $\times$ 5 topologies on real citation network data
+        \item \textbf{Critical Bug Fixes}: Identified and fixed tensor dimension errors in GAT implementation and missing forward pass layer in Neural Networks
+        \item \textbf{Agent Count Optimization}: Demonstrated that 10 agents (vs. 50) achieve better accuracy by reducing data sparsity
+        \item \textbf{Design Guidelines}: Provide empirical recommendations for topology and model selection
+    \end{itemize}
+
+    \section{Previous Work}
+
+    \subsection{Federated Learning}
+    McMahan et al. \cite{mcmahan2017fedavg} introduced Federated Averaging (FedAvg), which assumes a star topology with a central server. While effective for privacy-preserving learning, this approach creates a single point of failure and doesn't explore alternative topologies. Lian et al. \cite{lian2017decentsgd} studied decentralized parallel SGD with ring topologies, showing that communication patterns affect convergence rates, but focused only on simple linear models.
+
+    \subsection{Graph Neural Networks}
+    Veličković et al. \cite{velickovic2018gat} proposed Graph Attention Networks (GAT) that use attention mechanisms to weigh neighbor contributions. While GATs excel at exploiting graph structure, their application to multi-agent learning with limited local data is unexplored. Hamilton et al. \cite{hamilton2017graphsage} introduced GraphSAGE for inductive learning on large graphs, assuming access to the full graph structure unlike our distributed setting.
+
+    \subsection{Network Topology}
+    Nedić \& Ozdaglar \cite{nedic2009consensus} analyzed consensus algorithms, proving that network connectivity affects convergence speed. However, their theoretical work doesn't address modern ML models or empirical performance on real datasets.
+
+
+    Unlike prior work, our approach jointly evaluates diverse model architectures and network topologies in a unified distributed setting, highlighting interactions that earlier methods—typically assuming centralized or single-topology designs—do not capture.
+
+    \section{Approach}
+
+    \subsection{Network Topologies}
+    We evaluate five topologies (Table \ref{tab:topologies}): Star (centralized hub), Cascade (sequential chain), Feedback-Rewired (ring with rewired edges), Mesh (fully connected), and Scale-Free (power-law degree distribution).
+
+    \begin{table}[h]
+    \centering
+    \caption{Network Topologies (10 agents)}
+    \label{tab:topologies}
+    \small
+    \begin{tabular}{@{}lcc@{}}
+    \toprule
+    \textbf{Topology} & \textbf{Key Property} & \textbf{Edges} \\
+    \midrule
+    Star & Centralized hub & 9 \\
+    Cascade & Sequential flow & 18 \\
+    Feedback-Rewired & Ring with feedback & 15 \\
+    Mesh & Fully connected & 45 \\
+    Scale-Free & Power-law degree & 18 \\
+    \bottomrule
+    \end{tabular}
+    \end{table}
+
+    \subsection{Agent Models}
+    \textbf{Logistic Regression}: Simple linear classifier using L2 regularization ($C=1.0$).
+
+    \textbf{Neural Network}: 3-layer MLP with 64 hidden units, ReLU activations, trained with Adam optimizer ($\text{lr}=0.001$) for 100 epochs.
+
+    \textbf{Graph Attention Network (GAT)}: 2-layer GAT with multi-head attention to weigh neighbor contributions dynamically. \textit{Critical fix}: Corrected tensor dimension mismatches.
+
+    \textbf{Random Forest}: Ensemble of 100 decision trees with maximum depth of 10.
+
+    \subsection{Distributed Learning Protocol}
+    Our protocol operates over $R$ communication rounds:
+
+    \begin{algorithmic}
+    \FOR{$r = 1$ to $R$}
+        \FOR{each agent $i$}
+            \STATE $\theta_i \leftarrow \text{LocalTrain}(X_i, y_i)$
+        \ENDFOR
+        \FOR{each edge $(i,j)$ in network}
+            \STATE $\text{SendParams}(\theta_i, j)$
+        \ENDFOR
+        \FOR{each agent $i$}
+            \STATE $\theta_i \leftarrow \text{Average}(\{\theta_j : j \in N(i)\})$
+        \ENDFOR
+        \STATE Evaluate global accuracy
+    \ENDFOR
+    \end{algorithmic}
+
+    \textbf{Example:} Consider a simple three-agent chain A--B--C. After local training, agent A shares parameters only with B, and C also shares only with B. Agent B averages parameters from both neighbors, producing a refined model that is then used as the basis for the next round. This simple flow illustrates how topology shapes information propagation and influences convergence.
+
+    \subsection{Assumptions and Limitations}
+    \textbf{Assumptions}: Synchronous communication, reliable delivery, honest agents, IID data distribution.
+
+    \textbf{Limitations}: Single dataset limits generalization; fixed hyperparameters; single-run results without variance quantification. Regarding scalability, our approach scales linearly with the number of agents in terms of communication rounds, but denser topologies increase per-round message passing costs, and larger datasets would require more efficient local training or asynchronous updates to maintain performance.
+
+    \section{Experimental Setup}
+
+    \subsection{Dataset}
+    We use the Cora citation network \cite{sen2008cora}:
+    \begin{itemize}
+        \item \textbf{Nodes}: 2,708 research papers
+        \item \textbf{Features}: 1,433-dimensional bag-of-words
+        \item \textbf{Classes}: 7 paper categories
+        \item \textbf{Split}: 70\% training (1,895), 30\% test (813)
+    \end{itemize}
+
+    \subsection{Configuration}
+    Experiments use 10 agents, 30 rounds, and node failure perturbations (10\% probability). We report single-run results with fixed random seed for reproducibility.
+
+    \section{Results}
+
+    \subsection{Overall Performance}
+    Table \ref{tab:results} shows final test accuracy across all models and topologies.
+
+    \begin{table}[h]
+    \centering
+    \caption{Test Accuracy (\%) by Model and Topology}
+    \label{tab:results}
+    \small
+    \begin{tabular}{@{}lccccc@{}}
+    \toprule
+    \textbf{Model} & \textbf{Star} & \textbf{Casc.} & \textbf{Fdbk.} & \textbf{Mesh} & \textbf{SF} \\
+    \midrule
+    Logistic & 63.2 & \textbf{68.9} & 68.5 & 67.8 & 67.5 \\
+    GAT & 61.2 & 65.1 & 59.0 & 67.3 & 64.0 \\
+    RF & 49.9 & 48.9 & 50.3 & 48.8 & 48.9 \\
+    Neural & 31.5 & 30.6 & 39.2 & 30.3 & 31.0 \\
+    \bottomrule
+    \end{tabular}
+    \end{table}
+
+    \textbf{Key Findings}:
+    \begin{enumerate}
+        \item Logistic Regression achieves highest accuracy (67.2\%)
+        \item GAT competitive when properly implemented (63.3\%)
+        \item Neural Networks struggle with sparse distributed data (32.5\%)
+    \end{enumerate}
+
+    \subsection{Critical Bug Fixes}
+
+    \subsubsection{GAT Model Bug}
+    \textbf{Problem}: GAT failed with tensor dimension mismatches during attention computation, achieving only 10.95\% accuracy.
+
+    \textbf{Solution}: Fixed three issues: (1) attention masking tensor shape mismatch, (2) incorrect head dimension calculation, and (3) improper multi-head aggregation.
+
+    \textbf{Impact}: Accuracy improved from 10.95\% to 63.3\% (+52 points).
+
+    \subsubsection{Neural Network Bug}
+    \textbf{Problem}: Forward pass was missing final output layer, returning hidden features instead of class predictions.
+
+    \textbf{Solution}: Applied final layer transformation before returning predictions.
+
+    \textbf{Impact}: Accuracy improved from 14-26\% to 30-39\%.
+
+    \subsection{Agent Count Optimization}
+    Table \ref{tab:agents} shows the impact of agent count on performance.
+
+    \begin{table}[h]
+    \centering
+    \caption{Agent Count vs. Accuracy}
+    \label{tab:agents}
+    \small
+    \begin{tabular}{@{}cccc@{}}
+    \toprule
+    \textbf{Agents} & \textbf{Samples/Agent} & \textbf{Logistic} & \textbf{GAT} \\
+    \midrule
+    50 & $\sim$38 & 29-40\% & Failed \\
+    10 & $\sim$190 & \textbf{67.2\%} & \textbf{63.3\%} \\
+    \bottomrule
+    \end{tabular}
+    \end{table}
+
+    \subsection{Analysis and Interpretation}
+
+    \textbf{Why Logistic Regression Wins}: Low parameter count (10,031 params) fits well with limited data, convex optimization ensures convergence, and parameter averaging is theoretically grounded.
+
+    \textbf{Why Neural Networks Fail}: High parameter count ($\sim$100K params), non-convex optimization with local minima, no regularization, and parameter averaging across differently-trained networks is suboptimal.
+
+    \textbf{Why Topology Matters}: Cascade enables sequential refinement, Mesh provides fast consensus but may amplify noise, Star creates bottleneck and single point of failure.
+
+    \subsection{Robustness Analysis}
+    All models achieved $>$95\% robustness under 10\% node failures. Mesh topology showed highest resilience (99.9\% avg), while Star was most vulnerable due to hub dependency.
+
+    \section{Conclusion and Future Work}
+
+    \subsection{Summary}
+    Our comprehensive study reveals that: (1) model simplicity wins in distributed settings with limited local data, (2) GAT shows promise when properly implemented, (3) topology choice significantly impacts performance, and (4) 10 agents provide optimal balance between distribution and data availability.
+
+    \subsection{Milestone 3 (M3) Plans}
+    For M3, we do not plan to make major changes to the system. Our focus will be on minor refinements such as cleaning up the codebase, improving plot readability, and adding a small number of supplemental experiments if time allows (e.g., a light non-IID variant or a slightly different agent count). The overall methodology and framework will remain unchanged. M3 will primarily emphasize polishing the existing system and presenting the results clearly.
+
+    \subsection{Individual Contributions}
+    \textbf{Kartikeya Gullapalli}: Implemented GAT and Neural Network agents, debugged tensor dimension issues, ran all benchmarking experiments, generated visualizations.
+
+    \textbf{Andres Wearden}: Designed system architecture and simulation engine, implemented topology builders, developed evaluation metrics and reporting framework.
+
+    \textbf{Joint Work}: Problem formulation, experimental design, results interpretation, paper writing.
+
+    \begin{thebibliography}{9}
+
+    \bibitem{mcmahan2017fedavg}
+    B. McMahan, E. Moore, D. Ramage, S. Hampson, and B. A. y Arcas,
+    ``Communication-efficient learning of deep networks from decentralized data,''
+    in \textit{AISTATS}, 2017.
+
+    \bibitem{velickovic2018gat}
+    P. Veličković, G. Cucurull, A. Casanova, A. Romero, P. Liò, and Y. Bengio,
+    ``Graph attention networks,''
+    in \textit{ICLR}, 2018.
+
+    \bibitem{hamilton2017graphsage}
+    W. Hamilton, Z. Ying, and J. Leskovec,
+    ``Inductive representation learning on large graphs,''
+    in \textit{NeurIPS}, 2017.
+
+    \bibitem{nedic2009consensus}
+    A. Nedić and A. Ozdaglar,
+    ``Distributed subgradient methods for multi-agent optimization,''
+    \textit{IEEE Transactions on Automatic Control}, vol. 54, no. 1, pp. 48--61, 2009.
+
+    \bibitem{lian2017decentsgd}
+    X. Lian, C. Zhang, H. Zhang, C.-J. Hsieh, W. Zhang, and J. Liu,
+    ``Can decentralized algorithms outperform centralized algorithms? a case study for decentralized parallel stochastic gradient descent,''
+    in \textit{NeurIPS}, 2017.
+
+    \bibitem{sen2008cora}
+    P. Sen, G. Namata, M. Bilgic, L. Getoor, B. Galligher, and T. Eliassi-Rad,
+    ``Collective classification in network data,''
+    \textit{AI Magazine}, vol. 29, no. 3, pp. 93--106, 2008.
+
+    \end{thebibliography}
+
+    \end{document}

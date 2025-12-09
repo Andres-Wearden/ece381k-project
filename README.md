@@ -113,3 +113,62 @@ src/
 ├── evaluation/   # Metrics computation
 └── utils/        # Visualization and reporting
 ```
+
+---
+
+## Source Code Documentation
+
+### Dependencies
+
+| Package | Purpose |
+|---------|---------|
+| `numpy` | Array operations and numerical computations |
+| `torch` | Neural network and GAT model implementations |
+| `scikit-learn` | Logistic Regression and Random Forest models |
+| `networkx` | Graph data structure for network topologies |
+| `matplotlib` | Plotting accuracy curves and network visualizations |
+| `pandas` | CSV export and data manipulation |
+| `pyyaml` | Parsing YAML configuration files |
+| `tqdm` | Progress bar for simulation |
+
+### Algorithms
+
+**Distributed Learning (src/simulation/engine.py):**
+```
+For each round:
+  1. Each agent trains on its local data subset
+  2. Agents send model parameters to neighbors (based on topology edges)
+  3. Each agent averages received parameters with its own (FedAvg-style)
+  4. Evaluate ensemble prediction on test set
+```
+
+**Parameter Aggregation (src/agents/base_agent.py):**
+- Receives model parameters from neighboring agents
+- Computes element-wise average of all parameters (local + received)
+- Updates local model with averaged parameters
+
+**Topology Construction (src/networks/topologies.py):**
+- Star: Hub-and-spoke pattern using central node
+- Cascade: Chain with optional skip connections
+- Small-world: Watts-Strogatz algorithm (ring + random rewiring)
+- Scale-free: Barabási-Albert preferential attachment
+- Mesh: Complete graph (all-to-all connections)
+
+### Data Structures
+
+| Structure | Location | Description |
+|-----------|----------|-------------|
+| `Agent` | `src/agents/base_agent.py` | Base class with `train()`, `predict()`, `get_params()`, `aggregate()` methods |
+| `nx.DiGraph` | `src/networks/topologies.py` | Directed graph storing agent connections with edge weights |
+| `SimulationEngine` | `src/simulation/engine.py` | Manages agents, network, data distribution, and training loop |
+| `NodeFailure` | `src/simulation/perturbations.py` | Simulates random agent failures during training |
+
+### Key Files
+
+| File | Description |
+|------|-------------|
+| `cli.py` | Entry point - parses args, loads config, runs experiments |
+| `src/agents/models.py` | All agent implementations (Logistic, Neural, GAT, RF) |
+| `src/networks/topologies.py` | All topology builders (star, cascade, mesh, etc.) |
+| `src/simulation/engine.py` | Main simulation loop and data distribution |
+| `src/evaluation/metrics.py` | Accuracy, robustness, and error propagation metrics |
